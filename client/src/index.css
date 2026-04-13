@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap');
+@import 'tailwindcss';
+
+:root {
+  --base-bg: #f6f2e9;
+  --ink: #13283f;
+  --accent: #c3462c;
+  --accent-soft: #f2d8b0;
+  --card: #fff8ed;
+}
+
+body {
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  background:
+    radial-gradient(circle at 10% 20%, #f9e0c9 0%, rgba(249, 224, 201, 0) 28%),
+    radial-gradient(circle at 80% 10%, #ccdff1 0%, rgba(204, 223, 241, 0) 32%),
+    var(--base-bg);
+  color: var(--ink);
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'DM Serif Display', serif;
+  letter-spacing: 0.01em;
+}
+
+.card-surface {
+  background: linear-gradient(130deg, rgba(255, 248, 237, 0.96), rgba(245, 235, 222, 0.8));
+  border: 1px solid rgba(19, 40, 63, 0.08);
+  box-shadow: 0 18px 40px rgba(19, 40, 63, 0.08);
+}
+
+.fade-in {
+  animation: fade-in 0.45s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
