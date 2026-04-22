@@ -9,6 +9,12 @@
   --card: #fff8ed;
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: 'Space Grotesk', sans-serif;
@@ -21,17 +27,216 @@ body {
 
 h1,
 h2,
-h3 {
+h3,
+h4,
+h5,
+h6 {
   font-family: 'DM Serif Display', serif;
   letter-spacing: 0.01em;
 }
 
+/* ===== Cards & Surfaces ===== */
 .card-surface {
   background: linear-gradient(130deg, rgba(255, 248, 237, 0.96), rgba(245, 235, 222, 0.8));
   border: 1px solid rgba(19, 40, 63, 0.08);
   box-shadow: 0 18px 40px rgba(19, 40, 63, 0.08);
+  transition: all 0.3s ease;
 }
 
+.card-surface:hover {
+  box-shadow: 0 24px 48px rgba(19, 40, 63, 0.12);
+}
+
+/* ===== Stat Card ===== */
+.stat-card {
+  @apply rounded-3xl p-8 backdrop-blur-sm border border-white/50 hover:shadow-xl transition-all duration-300;
+  animation: fade-in 0.45s ease-out;
+  background: linear-gradient(130deg, rgba(255, 248, 237, 0.98), rgba(245, 235, 222, 0.85));
+  box-shadow: 0 10px 30px rgba(19, 40, 63, 0.06);
+}
+
+.stat-card-inner {
+  @apply flex items-center justify-between gap-4;
+}
+
+.stat-icon-wrapper {
+  @apply w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0;
+  background: linear-gradient(135deg, rgba(195, 70, 44, 0.15), rgba(242, 216, 176, 0.3));
+  border: 2px solid rgba(195, 70, 44, 0.1);
+}
+
+.stat-icon {
+  @apply text-3xl;
+}
+
+/* ===== Primary Button ===== */
+/* ===== Button Styles ===== */
+.btn-primary,
+.btn-secondary,
+.btn-primary-alt {
+  @apply inline-flex items-center justify-center gap-2 px-7 md:px-10 py-3.5 md:py-4.5 rounded-2xl font-bold text-base md:text-lg transition-all duration-300 no-underline;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+}
+
+/* Primary Button - Dark Background */
+.btn-primary {
+  @apply bg-gradient-to-br from-[var(--ink)] to-[var(--ink)]/90 text-white shadow-lg;
+  box-shadow: 0 8px 24px rgba(19, 40, 63, 0.25);
+}
+
+.btn-primary:hover {
+  @apply shadow-2xl transform -translate-y-1;
+  background: linear-gradient(to bottom right, var(--ink), rgba(19, 40, 63, 0.85));
+}
+
+.btn-primary:active {
+  @apply scale-95 shadow-md;
+}
+
+.btn-primary:focus-visible {
+  @apply outline-2 outline-offset-2;
+  outline-color: var(--ink);
+}
+
+/* Secondary Button - Light Background */
+.btn-secondary {
+  @apply bg-gradient-to-br from-white to-white/90 text-[var(--ink)] border-2 border-[var(--ink)]/20 shadow-md;
+  box-shadow: 0 4px 16px rgba(19, 40, 63, 0.12);
+}
+
+.btn-secondary:hover {
+  @apply border-[var(--ink)]/40 shadow-xl transform -translate-y-1;
+  background: linear-gradient(to bottom right, white, white);
+}
+
+.btn-secondary:active {
+  @apply scale-95 shadow-md;
+}
+
+.btn-secondary:focus-visible {
+  @apply outline-2 outline-offset-2;
+  outline-color: var(--ink);
+}
+
+/* Accent Button - CTA Background */
+.btn-primary-alt {
+  @apply bg-gradient-to-br from-white to-white/95 text-[var(--ink)] border-2 border-white/70 shadow-xl;
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.3);
+}
+
+.btn-primary-alt:hover {
+  @apply border-white shadow-2xl transform -translate-y-1;
+  background: linear-gradient(to bottom right, white, white);
+}
+
+.btn-primary-alt:active {
+  @apply scale-95 shadow-lg;
+}
+
+.btn-primary-alt:focus-visible {
+  @apply outline-2 outline-offset-2;
+  outline-color: white;
+}
+
+/* ===== Quick Action Card ===== */
+.quick-action-card {
+  @apply rounded-3xl p-8 shadow-lg backdrop-blur-sm border hover:shadow-2xl hover:scale-105 transition-all duration-300 no-underline;
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-action-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.5s ease;
+}
+
+.quick-action-card:hover::before {
+  left: 100%;
+}
+
+.quick-action-card.accent {
+  background: linear-gradient(135deg, var(--accent) 0%, rgba(195, 70, 44, 0.9) 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--ink);
+}
+
+.quick-action-card.primary {
+  background: linear-gradient(135deg, var(--ink) 0%, rgba(19, 40, 63, 0.9) 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--ink);
+}
+
+.quick-action-card h3 {
+  color: var(--ink);
+}
+
+.quick-action-card p {
+  color: rgba(19, 40, 63, 0.88);
+}
+
+.quick-action-card .text-xs {
+  color: rgba(19, 40, 63, 0.74);
+  font-weight: 600;
+}
+
+.quick-action-inner {
+  @apply relative z-10;
+}
+
+/* ===== Feature Card ===== */
+.feature-card {
+  @apply rounded-3xl p-8 relative;
+  animation: fade-in 0.45s ease-out;
+  background: linear-gradient(130deg, rgba(255, 248, 237, 0.95), rgba(245, 235, 222, 0.85));
+  border: 1px solid rgba(19, 40, 63, 0.08);
+  box-shadow: 0 10px 30px rgba(19, 40, 63, 0.06);
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(19, 40, 63, 0.12);
+}
+
+.feature-step-badge {
+  @apply absolute -top-4 -left-4 w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-[var(--accent)];
+  background: linear-gradient(135deg, var(--accent-soft), rgba(242, 216, 176, 0.6));
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(195, 70, 44, 0.15);
+}
+
+/* ===== Benefit Card ===== */
+.benefit-card {
+  @apply rounded-3xl p-8 md:p-12;
+  animation: fade-in 0.45s ease-out;
+  background: linear-gradient(130deg, rgba(255, 248, 237, 0.96), rgba(245, 235, 222, 0.8));
+  border: 1px solid rgba(19, 40, 63, 0.08);
+  box-shadow: 0 10px 30px rgba(19, 40, 63, 0.06);
+  transition: all 0.3s ease;
+}
+
+.benefit-card:hover {
+  box-shadow: 0 20px 40px rgba(19, 40, 63, 0.12);
+  transform: scale(1.02);
+}
+
+.benefit-card.left {
+  border-left: 4px solid var(--accent);
+}
+
+.benefit-card.right {
+  border-right: 4px solid var(--accent);
+}
+
+/* ===== Animations ===== */
 .fade-in {
   animation: fade-in 0.45s ease-out;
 }
@@ -39,11 +244,107 @@ h3 {
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ===== Smooth scrolling ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ===== Selection styling ===== */
+::selection {
+  background-color: var(--accent);
+  color: white;
+}
+
+/* ===== Scrollbar styling ===== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--base-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-soft);
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* ===== Link Effects ===== */
+a {
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+/* ===== Button Effects ===== */
+button {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* ===== Smooth Transitions ===== */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-width: 768px) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-primary-alt {
+    @apply text-base px-6 py-3;
+  }
+
+  .stat-card {
+    @apply p-6;
+  }
+
+  .quick-action-card {
+    @apply p-6;
+  }
+
+  .feature-card {
+    @apply p-6;
+  }
+
+  .benefit-card {
+    @apply p-6;
   }
 }
