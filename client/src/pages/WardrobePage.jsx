@@ -11,6 +11,14 @@ const initialForm = {
   imageUrl: '',
 };
 
+const CONFIDENCE_THRESHOLDS = {
+  type: 0.45,
+  category: 0.45,
+  color: 0.35,
+  season: 0.4,
+  occasion: 0.4,
+};
+
 const fileToBase64 = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -23,6 +31,8 @@ const WardrobePage = () => {
   const [form, setForm] = useState(initialForm);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState('');
 
   const fetchItems = async () => {
@@ -51,11 +61,75 @@ const WardrobePage = () => {
     try {
       await api.post('/wardrobe', form);
       setForm(initialForm);
+      setAnalysis(null);
       await fetchItems();
     } catch (apiError) {
       setError(apiError.response?.data?.message || 'Unable to add item.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onAnalyzeImage = async () => {
+    if (!form.imageUrl) {
+      setError('Upload an image first to auto-fill details.');
+      return;
+    }
+
+    setError('');
+    setAnalyzing(true);
+    try {
+      const startResponse = await api.post('/wardrobe/analyze', { imageUrl: form.imageUrl });
+      const jobId = startResponse.data?.job_id;
+
+      if (!jobId) {
+        throw new Error('Analysis job could not be created.');
+      }
+
+      let finalResult = null;
+      for (let attempts = 0; attempts < 60; attempts += 1) {
+        const statusResponse = await api.get(`/wardrobe/analyze/${jobId}`);
+        const { status, result, error: jobError } = statusResponse.data;
+
+        if (status === 'completed' && result) {
+          finalResult = result;
+          break;
+        }
+
+        if (status === 'failed') {
+          throw new Error(jobError || 'Image analysis failed.');
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+
+      if (!finalResult) {
+        throw new Error('Image analysis is taking longer than expected. Please try again.');
+      }
+
+      const { type, category, color, season, occasion, confidence } = finalResult;
+      const safeCategory = category === 'footwear' ? 'bottomwear' : category;
+      setForm((prev) => ({
+        ...prev,
+        type: confidence?.type >= CONFIDENCE_THRESHOLDS.type && type ? type : prev.type,
+        category: confidence?.category >= CONFIDENCE_THRESHOLDS.category && safeCategory ? safeCategory : prev.category,
+        color: confidence?.color >= CONFIDENCE_THRESHOLDS.color && color ? color : prev.color,
+        season: confidence?.season >= CONFIDENCE_THRESHOLDS.season && season ? season : prev.season,
+        occasion: confidence?.occasion >= CONFIDENCE_THRESHOLDS.occasion && occasion ? occasion : prev.occasion,
+      }));
+
+      const lowConfidenceFields = Object.entries(confidence || {})
+        .filter(([field, score]) => score < (CONFIDENCE_THRESHOLDS[field] || 0))
+        .map(([field]) => field);
+
+      setAnalysis({
+        ...finalResult,
+        lowConfidenceFields,
+      });
+    } catch (apiError) {
+      setError(apiError.response?.data?.message || 'Unable to analyze image right now.');
+    } finally {
+      setAnalyzing(false);
     }
   };
 
@@ -123,6 +197,26 @@ const WardrobePage = () => {
               onChange={onFileChange}
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
             />
+            <button
+              type="button"
+              onClick={onAnalyzeImage}
+              disabled={!form.imageUrl || analyzing}
+              className="w-full rounded-xl border border-[var(--ink)]/30 bg-white px-4 py-2.5 text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--ink)]/5 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {analyzing ? 'Analyzing Image...' : 'Auto Fill Details From Image'}
+            </button>
+            {analysis ? (
+              <div className="rounded-xl border border-[var(--accent)]/20 bg-[var(--accent-soft)]/30 p-3 text-sm text-[var(--ink)]">
+                <p className="font-semibold">Review the suggested fields before saving.</p>
+                <p className="mt-1">
+                  Suggested: {analysis.type} / {analysis.category} / {analysis.color} / {analysis.season} / {analysis.occasion}
+                </p>
+                <p className="mt-1 text-xs text-slate-700">
+                  Confidence: type {Math.round((analysis.confidence?.type || 0) * 100)}%, category {Math.round((analysis.confidence?.category || 0) * 100)}%, color {Math.round((analysis.confidence?.color || 0) * 100)}%, season {Math.round((analysis.confidence?.season || 0) * 100)}%, occasion {Math.round((analysis.confidence?.occasion || 0) * 100)}%
+                </p>
+                <p className="mt-1">Low confidence fields: {analysis.lowConfidenceFields.length ? analysis.lowConfidenceFields.join(', ') : 'none'}</p>
+              </div>
+            ) : null}
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <button
               type="submit"

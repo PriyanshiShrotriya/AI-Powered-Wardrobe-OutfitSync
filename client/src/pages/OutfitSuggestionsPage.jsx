@@ -2,6 +2,22 @@ import { useState } from 'react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
 
+const WEATHER_CONDITION_BY_CATEGORY = {
+  hot: 'sunny',
+  warm: 'sunny',
+  mild: 'cloudy',
+  cold: 'windy',
+  rainy: 'rainy',
+};
+
+const DEFAULT_TEMPERATURE_BY_CATEGORY = {
+  hot: 32,
+  warm: 26,
+  mild: 20,
+  cold: 10,
+  rainy: 18,
+};
+
 const OutfitSuggestionsPage = () => {
   const [city, setCity] = useState('');
   const [showCityFallback, setShowCityFallback] = useState(false);
@@ -12,6 +28,9 @@ const OutfitSuggestionsPage = () => {
   const [error, setError] = useState('');
   const [weatherInfo, setWeatherInfo] = useState(null);
   const [result, setResult] = useState(null);
+
+  const temperatureCelsius = weatherInfo?.temperature ?? DEFAULT_TEMPERATURE_BY_CATEGORY[weather] ?? 20;
+  const weatherCondition = WEATHER_CONDITION_BY_CATEGORY[weatherInfo?.weatherCategory || weather] || 'cloudy';
 
   const fetchLiveWeatherByCoordinates = async (latitude, longitude) => {
     setWeatherLoading(true);
@@ -86,7 +105,12 @@ const OutfitSuggestionsPage = () => {
     setError('');
 
     try {
-      const response = await api.post('/outfit/recommend', { weather, occasion });
+      const response = await api.post('/outfit/recommend', {
+        weather,
+        occasion,
+        temperature_celsius: Number(temperatureCelsius),
+        weather_condition: weatherCondition,
+      });
       setResult(response.data);
     } catch (apiError) {
       setError(apiError.response?.data?.message || 'Unable to generate suggestions.');
@@ -95,7 +119,7 @@ const OutfitSuggestionsPage = () => {
     }
   };
 
-  const recommendation = result?.recommendation;
+  const recommendation = result;
 
   return (
     <div className="min-h-screen">
@@ -137,7 +161,7 @@ const OutfitSuggestionsPage = () => {
           {weatherInfo ? (
             <p className="mt-3 text-sm text-slate-700">
               Live weather in {weatherInfo.city}, {weatherInfo.country}: {weatherInfo.temperature}C, precipitation {weatherInfo.precipitation} mm.
-              Mapped category: <strong>{weatherInfo.weatherCategory}</strong>
+              Mapped category: <strong>{weatherInfo.weatherCategory}</strong>, condition: <strong>{weatherCondition}</strong>
             </p>
           ) : null}
           <form className="mt-6 grid gap-3 md:grid-cols-[1fr_1fr_auto]" onSubmit={onSubmit}>
@@ -176,23 +200,37 @@ const OutfitSuggestionsPage = () => {
         {recommendation ? (
           <section className="fade-in mt-6">
             <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-slate-600">
-              <span className="rounded-full bg-white px-3 py-1">Source: {result.source}</span>
-              <span className="rounded-full bg-white px-3 py-1">Strategy: {recommendation.strategy}</span>
+              <span className="rounded-full bg-white px-3 py-1">Style Score: {Math.round((recommendation.style_score || 0) * 100)}%</span>
             </div>
-            <p className="mb-4 text-slate-700">{recommendation.notes}</p>
+            <p className="mb-4 text-slate-700">{recommendation.reasoning}</p>
             <div className="grid gap-4 md:grid-cols-3">
-              {recommendation.items?.map((item, index) => (
-                <article key={`${item._id || item.type}-${index}`} className="card-surface rounded-2xl p-4">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.type} className="h-40 w-full rounded-xl object-cover" />
-                  ) : null}
-                  <h3 className="mt-3 text-2xl text-[var(--ink)]">{item.type}</h3>
-                  <p className="text-sm text-slate-700">Color: {item.color}</p>
-                  <p className="text-sm text-slate-700">Season: {item.season}</p>
-                  <p className="text-sm text-slate-700">Occasion: {item.occasion}</p>
-                </article>
-              ))}
+              {[recommendation.top, recommendation.bottom, recommendation.shoes]
+                .filter(Boolean)
+                .map((item, index) => (
+                  <article key={`${item.id || item.name || item.type}-${index}`} className="card-surface rounded-2xl p-4">
+                    <h3 className="text-2xl text-[var(--ink)]">{item.name || item.type}</h3>
+                    <p className="text-sm text-slate-700">Category: {item.category}</p>
+                    <p className="text-sm text-slate-700">Colors: {item.colors?.join(', ') || item.color}</p>
+                    <p className="text-sm text-slate-700">Season: {item.weather_suitability?.join(', ') || item.season}</p>
+                  </article>
+                ))}
             </div>
+            {(recommendation.outerwear || recommendation.accessory) ? (
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {recommendation.outerwear ? (
+                  <article className="card-surface rounded-2xl p-4">
+                    <h3 className="text-2xl text-[var(--ink)]">{recommendation.outerwear.name || recommendation.outerwear.type}</h3>
+                    <p className="text-sm text-slate-700">Outerwear</p>
+                  </article>
+                ) : null}
+                {recommendation.accessory ? (
+                  <article className="card-surface rounded-2xl p-4">
+                    <h3 className="text-2xl text-[var(--ink)]">{recommendation.accessory.name || recommendation.accessory.type}</h3>
+                    <p className="text-sm text-slate-700">Accessory</p>
+                  </article>
+                ) : null}
+              </div>
+            ) : null}
           </section>
         ) : null}
       </main>

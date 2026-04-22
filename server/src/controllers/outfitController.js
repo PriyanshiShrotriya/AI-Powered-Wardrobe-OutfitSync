@@ -3,52 +3,105 @@ const { getRuleBasedRecommendation } = require('../services/outfitService');
 const { getAiRecommendation } = require('../services/aiClientService');
 const { getLiveWeather: getLiveWeatherData } = require('../services/weatherService');
 
+const WEATHER_CONDITION_BY_CATEGORY = {
+  hot: 'sunny',
+  warm: 'sunny',
+  mild: 'cloudy',
+  cold: 'windy',
+  rainy: 'rainy',
+};
+
+const DEFAULT_TEMPERATURE_BY_CATEGORY = {
+  hot: 32,
+  warm: 26,
+  mild: 20,
+  cold: 10,
+  rainy: 18,
+};
+
 const recommendOutfit = async (req, res, next) => {
   try {
-    const { wardrobeItems, weather, occasion } = req.body;
+    const {
+      weather,
+      occasion,
+      temperature_celsius,
+      weather_condition,
+      style_preference,
+      formality_level,
+      avoid_colors,
+    } = req.body;
 
-    if (!weather || !occasion) {
+    const normalizedWeather = (weather || '').toString().trim().toLowerCase();
+    const resolvedTemperature =
+      temperature_celsius ?? DEFAULT_TEMPERATURE_BY_CATEGORY[normalizedWeather] ?? 20;
+    const resolvedWeatherCondition =
+      weather_condition || WEATHER_CONDITION_BY_CATEGORY[normalizedWeather] || 'cloudy';
+
+    // Validate required fields from request body
+    if (!occasion) {
       return res.status(400).json({
-        message: 'weather and occasion are required',
+        message: 'occasion is required',
       });
     }
 
-    let userWardrobeItems = wardrobeItems;
-    if (!Array.isArray(userWardrobeItems) || userWardrobeItems.length === 0) {
-      userWardrobeItems = await ClothingItem.find({ userId: req.user.userId });
-    }
+    // Fetch user's full wardrobe from MongoDB
+    const wardrobeItems = await ClothingItem.find({ userId: req.user.userId });
 
-    if (!userWardrobeItems.length) {
+    if (!wardrobeItems.length) {
       return res.status(400).json({
         message: 'No wardrobe items available for recommendation',
       });
     }
 
-    try {
-      const aiResponse = await getAiRecommendation({
-        wardrobeItems: userWardrobeItems,
-        weather,
-        occasion,
-      });
+    // Map MongoDB documents to plain objects matching OutfitRequest wardrobe schema
+    // MongoDB fields: _id, userId, type, category, color, season, occasion, imageUrl, timestamps
+    // Map to: id, name, category, colors (as list), style_tags, occasion_tags, weather_suitability, fabric, fit
+    const mappedWardrobe = wardrobeItems.map((item) => ({
+      id: item._id.toString(),
+      name: item.type, // Use MongoDB 'type' as item name
+      category: item.category,
+      colors: [item.color], // MongoDB stores single color; wrap in array
+      style_tags: [], // Not available in current MongoDB schema; default to empty
+      occasion_tags: item.occasion ? [item.occasion] : [], // Wrap MongoDB occasion field
+      weather_suitability: item.season ? [item.season] : [], // Map season to weather_suitability
+      fabric: null, // Not stored in current schema
+      fit: null, // Not stored in current schema
+    }));
 
-      return res.json({
-        source: 'ai-service',
-        recommendation: aiResponse,
-      });
-    } catch (aiError) {
-      const fallback = getRuleBasedRecommendation({
-        wardrobeItems: userWardrobeItems,
-        weather,
-        occasion,
-      });
+    // Build the OutfitRequest payload for AI service
+    const aiServicePayload = {
+      user_id: req.user.userId,
+      wardrobe: mappedWardrobe,
+      occasion,
+      temperature_celsius: Number(resolvedTemperature),
+      weather_condition: resolvedWeatherCondition,
+      style_preference: style_preference || 'casual',
+      formality_level: formality_level || 3,
+      avoid_colors: avoid_colors || [],
+    };
 
-      return res.json({
-        source: 'rule-based-fallback',
-        recommendation: fallback,
-        warning: `AI service unavailable: ${aiError.message}`,
+    // Call AI service POST /recommend endpoint
+    const aiResponse = await getAiRecommendation(aiServicePayload);
+
+    // Return AI recommendation directly to client
+    return res.json(aiResponse);
+  } catch (error) {
+    // Handle AI service errors specifically
+    if (error.response && error.response.status === 422) {
+      // Forward 422 (Unprocessable Entity) errors from AI service
+      return res.status(422).json({
+        message: error.response.data.detail || 'Unable to assemble outfit',
       });
     }
-  } catch (error) {
+
+    // Forward other HTTP errors or handle connection failures
+    if (error.response) {
+      return res.status(error.response.status).json({
+        message: error.response.data.message || 'AI service error',
+      });
+    }
+
+    // Pass unexpected errors to middleware
     return next(error);
   }
 };
