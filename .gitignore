@@ -3,5 +3,6 @@ server/node_modules
 server/.env
 client/.env
 ai-service/.venv
+ai-service/.env
 __pycache__/
 *.pyc
