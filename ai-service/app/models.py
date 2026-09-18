@@ -35,6 +35,7 @@ class ClothingItem(BaseModel):
     weather_suitability: List[str]
     fabric: Optional[str] = None
     fit: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class OutfitRequest(BaseModel):

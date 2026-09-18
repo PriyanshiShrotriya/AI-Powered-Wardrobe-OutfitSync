@@ -143,23 +143,25 @@ const WardrobePage = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-[var(--base-bg)] to-[#ece6da]">
       <Navbar />
-      <main className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-8 md:grid-cols-[340px_1fr] md:px-8">
-        <section className="card-surface fade-in h-fit rounded-3xl p-6">
-          <h2 className="text-3xl text-[var(--ink)]">Add Clothing Item</h2>
-          <form className="mt-5 space-y-3" onSubmit={onSubmit}>
+      <main className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-10 md:grid-cols-[360px_1fr] md:px-8 md:py-12">
+        <section className="card-surface fade-in h-fit rounded-3xl p-6 md:p-7">
+          <span className="premium-pill">Wardrobe Intake</span>
+          <h2 className="mt-3 text-[1.8rem] text-[var(--ink)]">Add Clothing Item</h2>
+          <p className="mt-2 text-sm text-slate-600">Upload an image and let AI pre-fill details, then save to your collection.</p>
+          <form className="mt-6 space-y-3.5" onSubmit={onSubmit}>
             <input
               value={form.type}
               onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))}
               placeholder="Type (shirt, pants, shoes...)"
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+              className="ui-field"
               required
             />
             <select
               value={form.category}
               onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+              className="ui-field"
             >
               <option value="upperwear">Upperwear</option>
               <option value="bottomwear">Bottomwear</option>
@@ -168,13 +170,13 @@ const WardrobePage = () => {
               value={form.color}
               onChange={(event) => setForm((prev) => ({ ...prev, color: event.target.value }))}
               placeholder="Color"
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+              className="ui-field"
               required
             />
             <select
               value={form.season}
               onChange={(event) => setForm((prev) => ({ ...prev, season: event.target.value }))}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+              className="ui-field"
             >
               <option value="summer">Summer</option>
               <option value="winter">Winter</option>
@@ -184,7 +186,7 @@ const WardrobePage = () => {
             <select
               value={form.occasion}
               onChange={(event) => setForm((prev) => ({ ...prev, occasion: event.target.value }))}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+              className="ui-field"
             >
               <option value="casual">Casual</option>
               <option value="formal">Formal</option>
@@ -195,18 +197,18 @@ const WardrobePage = () => {
               type="file"
               accept="image/*"
               onChange={onFileChange}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+              className="ui-field"
             />
             <button
               type="button"
               onClick={onAnalyzeImage}
               disabled={!form.imageUrl || analyzing}
-              className="w-full rounded-xl border border-[var(--ink)]/30 bg-white px-4 py-2.5 text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--ink)]/5 disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
             >
               {analyzing ? 'Analyzing Image...' : 'Auto Fill Details From Image'}
             </button>
             {analysis ? (
-              <div className="rounded-xl border border-[var(--accent)]/20 bg-[var(--accent-soft)]/30 p-3 text-sm text-[var(--ink)]">
+              <div className="rounded-xl border border-[var(--accent)]/25 bg-[var(--accent-soft)]/45 p-3 text-sm text-[var(--ink)]">
                 <p className="font-semibold">Review the suggested fields before saving.</p>
                 <p className="mt-1">
                   Suggested: {analysis.type} / {analysis.category} / {analysis.color} / {analysis.season} / {analysis.occasion}
@@ -221,7 +223,7 @@ const WardrobePage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-semibold text-white disabled:opacity-60"
+              className="btn-primary w-full disabled:opacity-60"
             >
               {loading ? 'Saving...' : 'Save Item'}
             </button>
@@ -229,8 +231,16 @@ const WardrobePage = () => {
         </section>
 
         <section className="fade-in">
-          <h2 className="text-3xl text-[var(--ink)]">Wardrobe Grid</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <span className="premium-pill">Collection</span>
+              <h2 className="mt-2 text-[1.8rem] text-[var(--ink)]">Wardrobe Grid</h2>
+            </div>
+            <span className="rounded-full border border-[var(--line)] bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
+              {items.length} Items
+            </span>
+          </div>
+          <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => (
               <article key={item._id} className="card-surface rounded-2xl p-4">
                 {item.imageUrl ? (
@@ -254,7 +264,7 @@ const WardrobePage = () => {
                 <button
                   type="button"
                   onClick={() => onDelete(item._id)}
-                  className="mt-3 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
+                  className="btn-secondary mt-3 w-full"
                 >
                   Delete
                 </button>

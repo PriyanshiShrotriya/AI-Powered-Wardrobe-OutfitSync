@@ -147,7 +147,10 @@ class WardrobeRetriever:
         return filtered if filtered else wardrobe  # Fallback if all items are excluded
 
     def rank_by_similarity(
-        self, items: List[ClothingItem], query: str
+        self,
+        items: List[ClothingItem],
+        query: str,
+        query_embedding: Optional[np.ndarray] = None,
     ) -> List[ClothingItem]:
         """
         Rank items within a category using CLIP embeddings for semantic similarity.
@@ -164,7 +167,8 @@ class WardrobeRetriever:
 
         try:
             # Encode the query and all items into embeddings
-            query_embedding = self.model.encode(query, convert_to_numpy=True)
+            if query_embedding is None:
+                query_embedding = self.model.encode(query, convert_to_numpy=True)
 
             # Create item descriptions and embed them
             item_descriptions = [
@@ -211,6 +215,8 @@ class WardrobeRetriever:
         """
         categories = ["top", "bottom", "shoes", "outerwear", "accessory"]
         candidates = {}
+        style_query = f"{request.style_preference} for {request.occasion}"
+        style_query_embedding = self.model.encode(style_query, convert_to_numpy=True)
 
         # Apply global filters first
         weather_filtered = self.filter_by_weather(request.wardrobe, request.temperature_celsius)
@@ -237,7 +243,8 @@ class WardrobeRetriever:
             # Rank by semantic similarity to user's style preference
             ranked = self.rank_by_similarity(
                 occasion_filtered,
-                f"{request.style_preference} for {request.occasion}",
+                style_query,
+                style_query_embedding,
             )
 
             candidates[category] = ranked

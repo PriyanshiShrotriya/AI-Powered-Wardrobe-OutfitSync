@@ -1,8 +1,4 @@
-const TYPE_GROUPS = {
-  top: ['shirt', 'tshirt', 't-shirt', 'blouse', 'sweater', 'hoodie', 'jacket'],
-  bottom: ['pants', 'jeans', 'shorts', 'skirt', 'trousers'],
-  shoes: ['shoes', 'sneakers', 'boots', 'sandals', 'heels'],
-};
+const { getClothingGroup } = require('../utils/clothingClassification');
 
 const WEATHER_TO_SEASONS = {
   hot: ['summer', 'spring'],
@@ -14,8 +10,8 @@ const WEATHER_TO_SEASONS = {
 
 const normalize = (value) => (value || '').toString().trim().toLowerCase();
 
-const findBestItem = (items, typeList) => {
-  return items.find((item) => typeList.includes(normalize(item.type)));
+const findBestItem = (items, group) => {
+  return items.find((item) => getClothingGroup(item) === group);
 };
 
 const getRuleBasedRecommendation = ({ wardrobeItems, weather, occasion }) => {
@@ -34,9 +30,9 @@ const getRuleBasedRecommendation = ({ wardrobeItems, weather, occasion }) => {
 
   const sourceItems = filtered.length > 0 ? filtered : wardrobeItems;
 
-  const top = findBestItem(sourceItems, TYPE_GROUPS.top);
-  const bottom = findBestItem(sourceItems, TYPE_GROUPS.bottom);
-  const shoes = findBestItem(sourceItems, TYPE_GROUPS.shoes);
+  const top = findBestItem(sourceItems, 'top');
+  const bottom = findBestItem(sourceItems, 'bottom');
+  const shoes = findBestItem(sourceItems, 'shoes');
 
   const selected = [top, bottom, shoes].filter(Boolean);
 
