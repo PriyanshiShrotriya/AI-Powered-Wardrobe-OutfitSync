@@ -38,7 +38,7 @@ const RegisterPage = () => {
           value={form.email}
           onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
           placeholder="Email"
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none ring-[var(--accent)] transition focus:ring-2"
+          className="ui-field"
           required
         />
         <input
@@ -46,7 +46,7 @@ const RegisterPage = () => {
           value={form.password}
           onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
           placeholder="Password"
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none ring-[var(--accent)] transition focus:ring-2"
+          className="ui-field"
           minLength={6}
           required
         />
@@ -54,7 +54,7 @@ const RegisterPage = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-semibold text-white transition hover:brightness-95 disabled:opacity-60"
+          className="btn-primary w-full disabled:opacity-60"
         >
           {loading ? 'Creating account...' : 'Register'}
         </button>

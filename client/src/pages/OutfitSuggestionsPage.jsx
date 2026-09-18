@@ -18,6 +18,8 @@ const DEFAULT_TEMPERATURE_BY_CATEGORY = {
   rainy: 18,
 };
 
+const getItemImageUrl = (item) => item?.image_url || item?.imageUrl || '';
+
 const OutfitSuggestionsPage = () => {
   const [city, setCity] = useState('');
   const [showCityFallback, setShowCityFallback] = useState(false);
@@ -122,11 +124,12 @@ const OutfitSuggestionsPage = () => {
   const recommendation = result;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-[var(--base-bg)] to-[#ece6da]">
       <Navbar />
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
-        <section className="card-surface fade-in rounded-3xl p-6">
-          <h2 className="text-4xl text-[var(--ink)]">Outfit Suggestions</h2>
+      <main className="mx-auto w-full max-w-6xl px-6 py-10 md:px-8 md:py-12">
+        <section className="card-surface fade-in rounded-3xl p-6 md:p-7">
+          <span className="premium-pill">AI Styling Studio</span>
+          <h2 className="mt-3 text-[1.8rem] text-[var(--ink)]">Outfit Suggestions</h2>
           <p className="mt-2 text-slate-700">
             Select weather and occasion to generate AI-assisted combinations from your wardrobe.
           </p>
@@ -135,24 +138,24 @@ const OutfitSuggestionsPage = () => {
               type="button"
               onClick={fetchLiveWeather}
               disabled={weatherLoading}
-              className="rounded-xl bg-[var(--ink)] px-5 py-2.5 font-semibold text-white disabled:opacity-60"
+              className="btn-secondary disabled:opacity-60"
             >
               {weatherLoading ? 'Fetching weather...' : 'Use My Location Weather'}
             </button>
           </div>
           {showCityFallback ? (
-            <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto]">
+            <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
               <input
                 value={city}
                 onChange={(event) => setCity(event.target.value)}
                 placeholder="Enter city (fallback)"
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2"
+                className="ui-field"
               />
               <button
                 type="button"
                 onClick={fetchLiveWeatherByCity}
                 disabled={weatherLoading}
-                className="rounded-xl bg-slate-700 px-5 py-2.5 font-semibold text-white disabled:opacity-60"
+                className="btn-secondary disabled:opacity-60"
               >
                 {weatherLoading ? 'Fetching weather...' : 'Fetch by City'}
               </button>
@@ -164,11 +167,11 @@ const OutfitSuggestionsPage = () => {
               Mapped category: <strong>{weatherInfo.weatherCategory}</strong>, condition: <strong>{weatherCondition}</strong>
             </p>
           ) : null}
-          <form className="mt-6 grid gap-3 md:grid-cols-[1fr_1fr_auto]" onSubmit={onSubmit}>
+          <form className="mt-7 grid gap-3 md:grid-cols-[1fr_1fr_auto]" onSubmit={onSubmit}>
             <select
               value={weather}
               onChange={(event) => setWeather(event.target.value)}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2"
+              className="ui-field"
             >
               <option value="hot">Hot</option>
               <option value="warm">Warm</option>
@@ -179,7 +182,7 @@ const OutfitSuggestionsPage = () => {
             <select
               value={occasion}
               onChange={(event) => setOccasion(event.target.value)}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2"
+              className="ui-field"
             >
               <option value="casual">Casual</option>
               <option value="formal">Formal</option>
@@ -189,7 +192,7 @@ const OutfitSuggestionsPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-[var(--accent)] px-5 py-2.5 font-semibold text-white disabled:opacity-60"
+              className="btn-primary disabled:opacity-60"
             >
               {loading ? 'Generating...' : 'Suggest Outfit'}
             </button>
@@ -198,16 +201,35 @@ const OutfitSuggestionsPage = () => {
         </section>
 
         {recommendation ? (
-          <section className="fade-in mt-6">
+          <section className="fade-in mt-7">
             <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-slate-600">
-              <span className="rounded-full bg-white px-3 py-1">Style Score: {Math.round((recommendation.style_score || 0) * 100)}%</span>
+              <span className="rounded-full border border-[var(--line)] bg-white px-3 py-1 font-semibold">
+                {recommendation.strategy === 'rule-based-fallback'
+                  ? 'Rule-based fallback'
+                  : 'AI recommendation'}
+              </span>
+              <span className="rounded-full border border-[var(--line)] bg-white px-3 py-1 font-semibold">
+                Style Score: {Math.round((recommendation.style_score || 0) * 100)}%
+              </span>
             </div>
-            <p className="mb-4 text-slate-700">{recommendation.reasoning}</p>
-            <div className="grid gap-4 md:grid-cols-3">
+            {recommendation.fallback_reason ? (
+              <p className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                {recommendation.fallback_reason}
+              </p>
+            ) : null}
+            <p className="mb-5 rounded-2xl border border-[var(--line)] bg-white/70 p-4 text-slate-700">{recommendation.reasoning}</p>
+            <div className="grid gap-5 md:grid-cols-3">
               {[recommendation.top, recommendation.bottom, recommendation.shoes]
                 .filter(Boolean)
                 .map((item, index) => (
                   <article key={`${item.id || item.name || item.type}-${index}`} className="card-surface rounded-2xl p-4">
+                    {getItemImageUrl(item) ? (
+                      <img
+                        src={getItemImageUrl(item)}
+                        alt={item.name || item.type || 'Wardrobe item'}
+                        className="mb-3 h-44 w-full rounded-xl object-cover"
+                      />
+                    ) : null}
                     <h3 className="text-2xl text-[var(--ink)]">{item.name || item.type}</h3>
                     <p className="text-sm text-slate-700">Category: {item.category}</p>
                     <p className="text-sm text-slate-700">Colors: {item.colors?.join(', ') || item.color}</p>
@@ -216,15 +238,29 @@ const OutfitSuggestionsPage = () => {
                 ))}
             </div>
             {(recommendation.outerwear || recommendation.accessory) ? (
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div className="mt-5 grid gap-5 md:grid-cols-2">
                 {recommendation.outerwear ? (
                   <article className="card-surface rounded-2xl p-4">
+                    {getItemImageUrl(recommendation.outerwear) ? (
+                      <img
+                        src={getItemImageUrl(recommendation.outerwear)}
+                        alt={recommendation.outerwear.name || recommendation.outerwear.type || 'Outerwear'}
+                        className="mb-3 h-44 w-full rounded-xl object-cover"
+                      />
+                    ) : null}
                     <h3 className="text-2xl text-[var(--ink)]">{recommendation.outerwear.name || recommendation.outerwear.type}</h3>
                     <p className="text-sm text-slate-700">Outerwear</p>
                   </article>
                 ) : null}
                 {recommendation.accessory ? (
                   <article className="card-surface rounded-2xl p-4">
+                    {getItemImageUrl(recommendation.accessory) ? (
+                      <img
+                        src={getItemImageUrl(recommendation.accessory)}
+                        alt={recommendation.accessory.name || recommendation.accessory.type || 'Accessory'}
+                        className="mb-3 h-44 w-full rounded-xl object-cover"
+                      />
+                    ) : null}
                     <h3 className="text-2xl text-[var(--ink)]">{recommendation.accessory.name || recommendation.accessory.type}</h3>
                     <p className="text-sm text-slate-700">Accessory</p>
                   </article>

@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.concurrency import run_in_threadpool
+from threading import Lock
 from app.schemas.recommendation import (
     ImageAnalysisJobCreateRequest,
     ImageAnalysisJobCreateResponse,
@@ -15,14 +17,55 @@ from app.assembler import OutfitAssembler
 app = FastAPI(title="OutfitSync AI Service", version="0.1.0")
 
 
+# Reuse expensive components across requests to avoid repeated model/client setup.
+retriever = None
+retriever_error = None
+retriever_lock = Lock()
+assembler = None
+
+
+def get_retriever() -> WardrobeRetriever:
+    global retriever, retriever_error
+
+    if retriever is not None:
+        return retriever
+
+    with retriever_lock:
+        if retriever is not None:
+            return retriever
+        try:
+            retriever = WardrobeRetriever()
+            retriever_error = None
+            return retriever
+        except Exception as exc:
+            retriever_error = str(exc)
+            raise
+
+
 @app.on_event("startup")
 async def startup_event() -> None:
+    global assembler
     warm_classifier_async()
+    try:
+        assembler = OutfitAssembler()
+    except Exception as exc:
+        # Keep the service available for image analysis endpoints even if GROQ key is missing.
+        print(f"Warning: OutfitAssembler is unavailable at startup: {exc}")
 
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    if retriever is not None:
+        recommendation_model = "ready"
+    elif retriever_error is not None:
+        recommendation_model = "unavailable"
+    else:
+        recommendation_model = "not_initialized"
+
+    return {
+        "status": "ok",
+        "recommendation_model": recommendation_model,
+    }
 
 
 @app.post("/recommend", response_model=OutfitSuggestion)
@@ -47,15 +90,15 @@ async def recommend(payload: OutfitRequest) -> OutfitSuggestion:
         HTTPException 500: For other unexpected errors (API failures, etc.)
     """
     try:
-        # Initialize retriever and assembler.
-        retriever = WardrobeRetriever()
-        assembler = OutfitAssembler()
-        
+        global assembler
+        if assembler is None:
+            assembler = OutfitAssembler()
+
         # Step 1: Get filtered and ranked candidates per category.
-        candidates = retriever.get_candidates(payload)
-        
+        candidates = await run_in_threadpool(get_retriever().get_candidates, payload)
+
         # Step 2: Assemble outfit from candidates.
-        outfit = assembler.assemble(payload, candidates)
+        outfit = await run_in_threadpool(assembler.assemble, payload, candidates)
         
         return outfit
         

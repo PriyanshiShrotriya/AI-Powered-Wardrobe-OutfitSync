@@ -39,7 +39,7 @@ class OutfitAssembler:
                 "Please configure it in .env or system environment."
             )
         self.client = Groq(api_key=api_key)
-        self.model = "llama-3.1-70b-versatile"
+        self.model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
     def _format_candidates_for_prompt(
         self, candidates: Dict[str, List[ClothingItem]]
@@ -118,8 +118,8 @@ accessory_id (null if none), reasoning (2-3 sentences), style_score (0.0 to 1.0)
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                temperature=0.7,
-                max_tokens=1024,
+                temperature=0.4,
+                max_tokens=320,
             )
 
             # Parse the response.
