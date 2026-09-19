@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
+import LoadingState from '../components/LoadingState';
 
 const DashboardPage = () => {
   const [itemCount, setItemCount] = useState(0);
@@ -69,7 +70,7 @@ const DashboardPage = () => {
                 <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Total Items</p>
                 <div className="flex items-baseline gap-2">
                   <h3 className="text-3xl font-bold text-[var(--ink)]">
-                    {isLoading ? <span className="animate-pulse">...</span> : itemCount}
+                    {isLoading ? <LoadingState label="Loading" /> : itemCount}
                   </h3>
                   <span className="text-xs text-slate-600">pieces</span>
                 </div>

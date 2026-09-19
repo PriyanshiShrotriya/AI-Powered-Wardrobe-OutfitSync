@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthPageLayout from './AuthPageLayout';
+import ErrorMessage from '../components/ErrorMessage';
+import LoadingState from '../components/LoadingState';
 
 const LoginPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -36,29 +38,21 @@ const LoginPage = () => {
       ctaLabel="Create one"
     >
       <form className="space-y-4" onSubmit={onSubmit}>
-        <input
-          type="email"
-          value={form.email}
-          onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-          placeholder="Email"
-          className="ui-field"
-          required
-        />
-        <input
-          type="password"
-          value={form.password}
-          onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-          placeholder="Password"
-          className="ui-field"
-          required
-        />
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        <div>
+          <label className="ui-label" htmlFor="login-email">Email</label>
+          <input id="login-email" type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="you@example.com" className="ui-field" required />
+        </div>
+        <div>
+          <label className="ui-label" htmlFor="login-password">Password</label>
+          <input id="login-password" type="password" value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} placeholder="Enter your password" className="ui-field" required />
+        </div>
+        {error ? <ErrorMessage>{error}</ErrorMessage> : null}
         <button
           type="submit"
           disabled={loading}
           className="btn-primary w-full disabled:opacity-60"
         >
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? <LoadingState label="Logging in..." /> : 'Login'}
         </button>
       </form>
     </AuthPageLayout>
