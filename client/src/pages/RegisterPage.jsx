@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthPageLayout from './AuthPageLayout';
+import ErrorMessage from '../components/ErrorMessage';
+import LoadingState from '../components/LoadingState';
 
 const RegisterPage = () => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -33,30 +35,21 @@ const RegisterPage = () => {
       ctaLabel="Login"
     >
       <form className="space-y-4" onSubmit={onSubmit}>
-        <input
-          type="email"
-          value={form.email}
-          onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-          placeholder="Email"
-          className="ui-field"
-          required
-        />
-        <input
-          type="password"
-          value={form.password}
-          onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-          placeholder="Password"
-          className="ui-field"
-          minLength={6}
-          required
-        />
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        <div>
+          <label className="ui-label" htmlFor="register-email">Email</label>
+          <input id="register-email" type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="you@example.com" className="ui-field" required />
+        </div>
+        <div>
+          <label className="ui-label" htmlFor="register-password">Password</label>
+          <input id="register-password" type="password" value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} placeholder="At least 6 characters" className="ui-field" minLength={6} required />
+        </div>
+        {error ? <ErrorMessage>{error}</ErrorMessage> : null}
         <button
           type="submit"
           disabled={loading}
           className="btn-primary w-full disabled:opacity-60"
         >
-          {loading ? 'Creating account...' : 'Register'}
+          {loading ? <LoadingState label="Creating account..." /> : 'Register'}
         </button>
       </form>
     </AuthPageLayout>

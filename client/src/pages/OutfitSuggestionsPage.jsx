@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
+import ErrorMessage from '../components/ErrorMessage';
+import LoadingState from '../components/LoadingState';
 
 const WEATHER_CONDITION_BY_CATEGORY = {
   hot: 'sunny',
@@ -140,24 +142,28 @@ const OutfitSuggestionsPage = () => {
               disabled={weatherLoading}
               className="btn-secondary disabled:opacity-60"
             >
-              {weatherLoading ? 'Fetching weather...' : 'Use My Location Weather'}
+              {weatherLoading ? <LoadingState label="Fetching weather..." /> : 'Use My Location Weather'}
             </button>
           </div>
           {showCityFallback ? (
             <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
-              <input
-                value={city}
-                onChange={(event) => setCity(event.target.value)}
-                placeholder="Enter city (fallback)"
-                className="ui-field"
-              />
+              <div>
+                <label className="ui-label" htmlFor="outfit-city">City</label>
+                <input
+                  value={city}
+                  onChange={(event) => setCity(event.target.value)}
+                  id="outfit-city"
+                  placeholder="Enter city (fallback)"
+                  className="ui-field"
+                />
+              </div>
               <button
                 type="button"
                 onClick={fetchLiveWeatherByCity}
                 disabled={weatherLoading}
                 className="btn-secondary disabled:opacity-60"
               >
-                {weatherLoading ? 'Fetching weather...' : 'Fetch by City'}
+                {weatherLoading ? <LoadingState label="Fetching weather..." /> : 'Fetch by City'}
               </button>
             </div>
           ) : null}
@@ -168,36 +174,34 @@ const OutfitSuggestionsPage = () => {
             </p>
           ) : null}
           <form className="mt-7 grid gap-3 md:grid-cols-[1fr_1fr_auto]" onSubmit={onSubmit}>
-            <select
-              value={weather}
-              onChange={(event) => setWeather(event.target.value)}
-              className="ui-field"
-            >
-              <option value="hot">Hot</option>
-              <option value="warm">Warm</option>
-              <option value="mild">Mild</option>
-              <option value="cold">Cold</option>
-              <option value="rainy">Rainy</option>
-            </select>
-            <select
-              value={occasion}
-              onChange={(event) => setOccasion(event.target.value)}
-              className="ui-field"
-            >
-              <option value="casual">Casual</option>
-              <option value="formal">Formal</option>
-              <option value="sport">Sport</option>
-              <option value="party">Party</option>
-            </select>
+            <div>
+              <label className="ui-label" htmlFor="outfit-weather">Weather</label>
+              <select id="outfit-weather" value={weather} onChange={(event) => setWeather(event.target.value)} className="ui-field">
+                <option value="hot">Hot</option>
+                <option value="warm">Warm</option>
+                <option value="mild">Mild</option>
+                <option value="cold">Cold</option>
+                <option value="rainy">Rainy</option>
+              </select>
+            </div>
+            <div>
+              <label className="ui-label" htmlFor="outfit-occasion">Occasion</label>
+              <select id="outfit-occasion" value={occasion} onChange={(event) => setOccasion(event.target.value)} className="ui-field">
+                <option value="casual">Casual</option>
+                <option value="formal">Formal</option>
+                <option value="sport">Sport</option>
+                <option value="party">Party</option>
+              </select>
+            </div>
             <button
               type="submit"
               disabled={loading}
               className="btn-primary disabled:opacity-60"
             >
-              {loading ? 'Generating...' : 'Suggest Outfit'}
+              {loading ? <LoadingState label="Generating..." /> : 'Suggest Outfit'}
             </button>
           </form>
-          {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
+          {error ? <ErrorMessage className="mt-3">{error}</ErrorMessage> : null}
         </section>
 
         {recommendation ? (

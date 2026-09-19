@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
+import EmptyState from '../components/EmptyState';
+import ErrorMessage from '../components/ErrorMessage';
+import LoadingState from '../components/LoadingState';
 
 const initialForm = {
   type: '',
@@ -151,61 +154,50 @@ const WardrobePage = () => {
           <h2 className="mt-3 text-[1.8rem] text-[var(--ink)]">Add Clothing Item</h2>
           <p className="mt-2 text-sm text-slate-600">Upload an image and let AI pre-fill details, then save to your collection.</p>
           <form className="mt-6 space-y-3.5" onSubmit={onSubmit}>
-            <input
-              value={form.type}
-              onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))}
-              placeholder="Type (shirt, pants, shoes...)"
-              className="ui-field"
-              required
-            />
-            <select
-              value={form.category}
-              onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
-              className="ui-field"
-            >
-              <option value="upperwear">Upperwear</option>
-              <option value="bottomwear">Bottomwear</option>
-            </select>
-            <input
-              value={form.color}
-              onChange={(event) => setForm((prev) => ({ ...prev, color: event.target.value }))}
-              placeholder="Color"
-              className="ui-field"
-              required
-            />
-            <select
-              value={form.season}
-              onChange={(event) => setForm((prev) => ({ ...prev, season: event.target.value }))}
-              className="ui-field"
-            >
-              <option value="summer">Summer</option>
-              <option value="winter">Winter</option>
-              <option value="spring">Spring</option>
-              <option value="fall">Fall</option>
-            </select>
-            <select
-              value={form.occasion}
-              onChange={(event) => setForm((prev) => ({ ...prev, occasion: event.target.value }))}
-              className="ui-field"
-            >
-              <option value="casual">Casual</option>
-              <option value="formal">Formal</option>
-              <option value="sport">Sport</option>
-              <option value="party">Party</option>
-            </select>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={onFileChange}
-              className="ui-field"
-            />
+            <div>
+              <label className="ui-label" htmlFor="wardrobe-type">Type</label>
+              <input id="wardrobe-type" value={form.type} onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))} placeholder="Shirt, pants, shoes..." className="ui-field" required />
+            </div>
+            <div>
+              <label className="ui-label" htmlFor="wardrobe-category">Category</label>
+              <select id="wardrobe-category" value={form.category} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))} className="ui-field">
+                <option value="upperwear">Upperwear</option>
+                <option value="bottomwear">Bottomwear</option>
+              </select>
+            </div>
+            <div>
+              <label className="ui-label" htmlFor="wardrobe-color">Color</label>
+              <input id="wardrobe-color" value={form.color} onChange={(event) => setForm((prev) => ({ ...prev, color: event.target.value }))} placeholder="Color" className="ui-field" required />
+            </div>
+            <div>
+              <label className="ui-label" htmlFor="wardrobe-season">Season</label>
+              <select id="wardrobe-season" value={form.season} onChange={(event) => setForm((prev) => ({ ...prev, season: event.target.value }))} className="ui-field">
+                <option value="summer">Summer</option>
+                <option value="winter">Winter</option>
+                <option value="spring">Spring</option>
+                <option value="fall">Fall</option>
+              </select>
+            </div>
+            <div>
+              <label className="ui-label" htmlFor="wardrobe-occasion">Occasion</label>
+              <select id="wardrobe-occasion" value={form.occasion} onChange={(event) => setForm((prev) => ({ ...prev, occasion: event.target.value }))} className="ui-field">
+                <option value="casual">Casual</option>
+                <option value="formal">Formal</option>
+                <option value="sport">Sport</option>
+                <option value="party">Party</option>
+              </select>
+            </div>
+            <div>
+              <label className="ui-label" htmlFor="wardrobe-image">Image</label>
+              <input id="wardrobe-image" type="file" accept="image/*" onChange={onFileChange} className="ui-field" />
+            </div>
             <button
               type="button"
               onClick={onAnalyzeImage}
               disabled={!form.imageUrl || analyzing}
               className="btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {analyzing ? 'Analyzing Image...' : 'Auto Fill Details From Image'}
+              {analyzing ? <LoadingState label="Analyzing image..." /> : 'Auto Fill Details From Image'}
             </button>
             {analysis ? (
               <div className="rounded-xl border border-[var(--accent)]/25 bg-[var(--accent-soft)]/45 p-3 text-sm text-[var(--ink)]">
@@ -219,13 +211,13 @@ const WardrobePage = () => {
                 <p className="mt-1">Low confidence fields: {analysis.lowConfidenceFields.length ? analysis.lowConfidenceFields.join(', ') : 'none'}</p>
               </div>
             ) : null}
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? <ErrorMessage>{error}</ErrorMessage> : null}
             <button
               type="submit"
               disabled={loading}
               className="btn-primary w-full disabled:opacity-60"
             >
-              {loading ? 'Saving...' : 'Save Item'}
+              {loading ? <LoadingState label="Saving..." /> : 'Save Item'}
             </button>
           </form>
         </section>
@@ -240,8 +232,9 @@ const WardrobePage = () => {
               {items.length} Items
             </span>
           </div>
-          <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((item) => (
+          {items.length ? (
+            <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((item) => (
               <article key={item._id} className="card-surface rounded-2xl p-4">
                 {item.imageUrl ? (
                   <img
@@ -269,8 +262,15 @@ const WardrobePage = () => {
                   Delete
                 </button>
               </article>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="Your wardrobe is empty"
+              description="Add your first clothing item to start building personalized outfit suggestions."
+              action={<a href="#wardrobe-type" className="btn-primary">Add your first item</a>}
+            />
+          )}
         </section>
       </main>
     </div>
